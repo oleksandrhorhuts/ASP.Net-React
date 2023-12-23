@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect,SetStateAction, Dispatch } from 'react';
 import {
   Box,
   Stack,
@@ -17,6 +17,7 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { styled } from '@mui/material/styles';
 import { CancelButton, DropzoneComponent } from "../../atoms";
+import { SelectChangeEvent } from '@mui/material/Select';
 
 const ModalWrap = styled(Box)({
   position: 'absolute',
@@ -26,12 +27,14 @@ const ModalWrap = styled(Box)({
   backgroundColor: 'white',
   minWidth: 300,
   minHeight: 500,
-  maxHeight: 700,
-  height: '70%',
+  height: '80%',
   overflow: "auto",
-  width: '70%',
+  width: '85%',
   padding: 24,
-  borderRadius: 10
+  borderRadius: 10,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
 });
 
 const InputField = styled(TextField)({
@@ -72,16 +75,71 @@ const SubTitle = styled(Typography)(({ theme }) => ({
   }
 }));
 
+interface IDocument {
+  type: string,
+  file: any,
+  setFiles:Dispatch<SetStateAction<never[]>>
+}
+
 const NewItem = ({
   onClose
 }: {
   onClose: () => void
 }) => {
-  const [file1, setFile1] = useState([]);
-  const [file2, setFile2] = useState([]);
-  const [file3, setFile3] = useState([]);
-  const [file4, setFile4] = useState([]);
+  const [invoice, setInvoice] = useState([]);
+  const [cmr, setCMR] = useState([]);
+  const [cim, setCIM] = useState([]);
+  const [extraDocuments, setExtraDocuments] = useState<any>({});
+  const [docToAdd, setDocToAdd] = useState("");
+  const [unaddedFiles, setUnaddedFiles] = useState<string[]>([]);
 
+  const allFileTypes = [
+    "Analiza",
+    "Anex",
+    "Ata Karnet",
+    "Avionski Tovaren List",
+    "Baranje",
+  ]
+
+  useEffect(() => {
+    setUnaddedFiles(allFileTypes);
+  }, []);
+
+  const changeDocumentToAdd = (event: SelectChangeEvent) => {
+    setDocToAdd(event.target.value);
+  }
+  const addDocument = () => {
+    if(docToAdd == "") {return;}
+    setUnaddedFiles(unaddedFiles.filter(item => item !== docToAdd));
+    let extraDocument : IDocument = {
+      type: docToAdd,
+      file: [],
+      setFiles: (value => {
+        let doc = extraDocuments[extraDocument.type]
+        if(doc == null) {
+          return;
+        }
+        doc.file = value;
+        setExtraDocuments((existingExtra:any) => {
+          return {
+            ...existingExtra,
+            [extraDocument.type]: {
+              doc
+            }
+          }
+        })
+
+      })
+    }
+    setExtraDocuments((existingExtra:any) => {
+      return {
+        ...existingExtra,
+        docToAdd: {
+          extraDocument
+        }
+      }
+    })
+  }
   return (
     <ModalWrap>
       <Box>
@@ -99,34 +157,66 @@ const NewItem = ({
       >
         <Stack
           width={{lg: '40%', xs: '100%'}}
-          gap={2}
+          gap={3}
           mt={{md: 3, xs: 2}}
-          justifyContent="space-around"
+          pr={2}
+          justifyContent="start"
+          style={{
+            overflowY: 'scroll'
+          }}
         >
           <DropzoneComponent
-            files={file1}
-            setFiles={setFile1}
+            files={invoice}
+            setFiles={setInvoice}
+            icon={false}
+            title="Фактура"
+          />
+          <DropzoneComponent
+            files={cmr}
+            setFiles={setCMR}
             icon={false}
             title="ЦМР"
           />
           <DropzoneComponent
-            files={file2}
-            setFiles={setFile2}
+            files={cim}
+            setFiles={setCIM}
             icon={false}
-            title="ЦМР"
+            title="ЦИМ"
           />
-          <DropzoneComponent
-            files={file3}
-            setFiles={setFile3}
-            icon={false}
-            title="Предмет"
-          />
-          <DropzoneComponent
-            files={file4}
-            setFiles={setFile4}
-            icon={false}
-            title="Предмет"
-          />
+           <Stack
+           direction="row"
+           gap={2}>
+           <Select
+                label="Додади документ"
+                placeholder="Додади документ"
+                size="small"
+                onChange={changeDocumentToAdd}
+                sx={{
+                  width: "100%",
+                  marginTop: "0px",
+                }}
+              >
+                {
+                   unaddedFiles.map(ft => 
+                    <MenuItem value={ft}>{ft}</MenuItem>
+                   )
+                }
+            </Select>
+            
+            <StyledButton sx={{ borderColor: 'white', padding: '0px 15px' }} onClick={addDocument}>
+              Додади
+            </StyledButton>
+           </Stack>
+           {
+            Object.keys(extraDocuments).map(extraDoc => 
+              <DropzoneComponent
+              files={extraDocuments[extraDoc].file}
+              setFiles={extraDocuments[extraDoc].setFiles}
+              icon={false}
+              title={extraDoc}
+              />
+              )
+           }
         </Stack>
         <Box width={{lg: '60%', xs: '100%'}} mt={{md: 3, xs: 2}}>
           <Stack
@@ -144,13 +234,34 @@ const NewItem = ({
                 size="small"
               />
               <InputField
-                label="Коминтент"
+                label="Позиција бр."
+                defaultValue=""
+                size="small"
+               />
+              <InputField
+                label="Декларација"
                 defaultValue=""
                 size="small"
               />
-              <StyledDatePicker />
-              <Select
-                label="Коминтент"
+            <InputField
+              label="ЦМР"
+              defaultValue=""
+              size="small"
+              />
+            <InputField
+              label="ЦИМ"
+              defaultValue=""
+              size="small"
+            />
+            <StyledDatePicker 
+              label="Евиденција"/>
+            <InputField
+              label="Фактура Бр."
+              defaultValue=""
+              size="small"
+            />
+              {/* <Select
+                label=""
                 size="small"
                 sx={{
                   width: "100%",
@@ -160,33 +271,35 @@ const NewItem = ({
               >
                 <MenuItem value={'male'}>male</MenuItem>
                 <MenuItem value={'female'}>female</MenuItem>
-              </Select>
+              </Select> */}
             </InputWrap>
             <InputWrap>
               <SubTitle>Транспорт</SubTitle>
               <InputField
-                label="Позиција бр."
+                label="Превозник"
                 defaultValue=""
                 size="small"
               />
               <InputField
-                label="Коминтент"
+                label="Регистрација"
                 defaultValue=""
                 size="small"
               />
-              <StyledDatePicker />
-              <Select
-                label="Коминтент"
+              <InputField
+                label="Тип Услуга"
+                defaultValue=""
                 size="small"
-                sx={{
-                  width: "100%",
-                  marginTop: "10px",
-                }}
-                defaultValue={'male'}
-              >
-                <MenuItem value={'male'}>male</MenuItem>
-                <MenuItem value={'female'}>female</MenuItem>
-              </Select>
+              />
+              <InputField
+                label="Тип Превоз"
+                defaultValue=""
+                size="small"
+              />
+              <InputField
+                label="Тип Стока"
+                defaultValue=""
+                size="small"
+              />
             </InputWrap>
           </Stack>
           <Stack
@@ -197,7 +310,7 @@ const NewItem = ({
             gap={1}
             mt={3}
           >
-            <InputWrap>
+            {/* <InputWrap>
               <SubTitle>Основни Податоци</SubTitle>
               <List sx={{ width: '100%' }}>
                   {
@@ -217,32 +330,33 @@ const NewItem = ({
                     )
                   }
               </List>
+            </InputWrap> */}
+            <InputWrap>
+              <SubTitle>Дестинација</SubTitle>
+              <InputField
+                label="Држава"
+                defaultValue=""
+                size="small"
+              />
+              <InputField
+                label="Град"
+                defaultValue=""
+                size="small"
+              />
+              <StyledDatePicker 
+                label="Поаѓање"/>
+                <StyledDatePicker 
+                  label="Пристигнување"/>
             </InputWrap>
             <InputWrap>
-              <SubTitle>Основни Податоци</SubTitle>
-              <InputField
-                label="First Name"
+              <SubTitle>Забелешка</SubTitle>
+                <InputField
+                multiline
+                rows={7}
+                label="Забелешка"
                 defaultValue=""
                 size="small"
               />
-              <InputField
-                label="Last Name"
-                defaultValue=""
-                size="small"
-              />
-              <StyledDatePicker />
-              <Select
-                label="Gender"
-                size="small"
-                sx={{
-                  width: "100%",
-                  marginTop: "10px",
-                }}
-                defaultValue={'male'}
-              >
-                <MenuItem value={'male'}>male</MenuItem>
-                <MenuItem value={'female'}>female</MenuItem>
-              </Select>
             </InputWrap>
           </Stack>
         </Box>
@@ -254,6 +368,7 @@ const NewItem = ({
           xs: 'column'
         }}
         gap={1}
+        mb={0}
         mt={2}
       >
         <CancelButton cancel={onClose} />

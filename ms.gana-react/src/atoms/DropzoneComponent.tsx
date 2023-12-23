@@ -11,6 +11,7 @@ import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 const baseStyle = {
   display: 'flex',
@@ -88,18 +89,27 @@ function DropzoneComponent({
     >
       <ListItem
         secondaryAction={
-          <IconButton
-            aria-label="comment"
-            onClick={() => setFiles([])}
-          >
-            <DeleteIcon />
-          </IconButton>
+          <Stack direction="row">
+            <IconButton
+              aria-label="comment"
+              onClick={() => setFiles([])}
+            >
+              <VisibilityIcon />
+            <IconButton
+              aria-label="comment"
+              onClick={() => setFiles([])}
+            >
+              <DeleteIcon />
+            </IconButton>
+            </IconButton>
+
+          </Stack>
         }
       >
         <ListItemIcon>
           <InsertDriveFileIcon />
         </ListItemIcon>
-        <ListItemText id="switch-list-label-wifi" primary={file.name} />
+        <ListItemText id="switch-list-label-wifi" primary={file.name} secondary={title} />
       </ListItem>
     </List>
   ));
