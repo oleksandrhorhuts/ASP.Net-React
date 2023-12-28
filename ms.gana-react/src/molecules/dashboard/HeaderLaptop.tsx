@@ -25,7 +25,7 @@ const StyledLink = styled(Button)({
 
 const HeaderLaptop = ({
   itemModalOpen,
-  connectModalOpen
+  connectModalOpen,
 }: {
   itemModalOpen: () => void
   connectModalOpen: () => void

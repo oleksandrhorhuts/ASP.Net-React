@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, SetStateAction, Dispatch } from 'react';
+import { useState, useCallback, useEffect, useMemo, SetStateAction, Dispatch } from 'react';
 import { useDropzone } from 'react-dropzone';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import Box from '@mui/material/Box';
@@ -50,10 +50,14 @@ function DropzoneComponent({
   icon?: boolean,
   title?: string,
 }) {
+  
   const onDrop = useCallback((acceptedFiles: any) => {
     setFiles(acceptedFiles.map((file: any) => Object.assign(file, {
       preview: URL.createObjectURL(file)
     })));
+    
+    
+    console.log(acceptedFiles,"acceptedFiles");
   // eslint-disable-next-line
   }, []);
 
