@@ -26,9 +26,7 @@ const DashboardLayout = ({
   FilterFn
 } : {
   children: React.ReactNode,
-  FilterFn?:(clientIdFilter:any,pageNumberFilter:any, positionNumberFilter:any,declarationFilter:any,
-    CMRFilter:any,CIMFilter:any,invoiceFilter:any,plateNumberFilter:any,transporterIdFilter:any, serviceTypeIdFilter:any,
-    transportTypeIdFilter:any,goodsTypeIdFilter:any,countryFilter:any,cityFilter:any) => void,
+  FilterFn?:(pageNumberFilter:any) => void,
 }) => {
   
   const [show, setShow] = useState(false);
@@ -56,9 +54,7 @@ const DashboardLayout = ({
   const [CIMFilter, setCIMFilter] = useState<number | ''>('');
   const [invoiceFilter, setInvoiceFilter] = useState<number | ''>('');
   const [plateNumberFilter, setPlateNumberFilter] = useState("");
-  const onFilter = (clientIdFilter:any,pageNumberFilter:any, positionNumberFilter:any,declarationFilter:any,
-    CMRFilter:any,CIMFilter:any,invoiceFilter:any,plateNumberFilter:any,transporterIdFilter:any, serviceTypeIdFilter:any,
-    transportTypeIdFilter:any,goodsTypeIdFilter:any,countryFilter:any,cityFilter:any) => {
+  const onFilter = (pageNumberFilter:any) => {
       // setpageNumberFilter(pageNumberFilter.current);
       // setPositionNumberFilter(positionNumberFilter.current);
       // setDeclarationFilter(declarationFilter.current);
@@ -66,9 +62,8 @@ const DashboardLayout = ({
       // setCIMFilter(CIMFilter.current);
       // setInvoiceFilter(invoiceFilter.current);
       // setPlateNumberFilter(plateNumberFilter.current);
-      FilterFn && FilterFn(clientIdFilter.current,pageNumberFilter.current, positionNumberFilter.current,declarationFilter.current,
-        CMRFilter.current, CIMFilter.current, invoiceFilter.current, plateNumberFilter.current, transporterIdFilter.current, 
-        serviceTypeIdFilter.current, transportTypeIdFilter.current, goodsTypeIdFilter.current, countryFilter.current, cityFilter.current);
+      console.log(pageNumberFilter.current,'current page Number');
+      FilterFn && FilterFn(pageNumberFilter.current);
   }
    
   return (

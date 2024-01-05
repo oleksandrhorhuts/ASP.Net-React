@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { DashboardLayout } from "../organisms";
 import { StyledTable } from "../atoms";
 import { styled } from "@mui/material/styles";
@@ -61,6 +62,46 @@ interface DashboardProps {
 }
 
 const Dashboard = (props: DashboardProps) => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const [positionNumber, setPositionNumber] = useState<any>('');
+  const [clientId, setClientId] = useState<any>('');
+  const [declaration, setDeclaration] = useState<any>('');
+  const [plateNumber, setPlateNumber] = useState<any>('');
+  const [transporterId, setTransporterId] = useState<any>('');
+  const [serviceTypeId, setServiceTypeId] = useState<any>('');
+  const [transportTypeId, setTransportTypeId] = useState<any>('');
+  const [goodsTypeId, setGoodsTypeId] = useState<any>('');
+  const [countryId, setCountryId] = useState<any>('');
+  const [cityId, setCityId] = useState<any>('');
+  const [cmrNumber, setCmrNumber] = useState<any>(0);
+  const [cimNumber, setCimNumber] = useState<any>(0);
+  const [invoice, setInvoice] = useState<any>(0);
+  const [pageSize, setPageSize] = useState<any>(10);
+
+  useEffect(()=>{
+    setPositionNumber(queryParams.get('positionNumber')?queryParams.get('positionNumber'):'');
+    setClientId(queryParams.get('clientId')?queryParams.get('clientId'):'');
+    setDeclaration(queryParams.get('declaration')?queryParams.get('declaration'):'');
+    setPlateNumber(queryParams.get('plateNumber')?queryParams.get('plateNumber'):'');
+    setTransporterId(queryParams.get('transporterId')?queryParams.get('transporterId'):'');
+    setServiceTypeId(queryParams.get('serviceTypeId')?queryParams.get('serviceTypeId'):'');
+    setTransportTypeId(queryParams.get('transportTypeId')?queryParams.get('transportTypeId'):'');
+    setGoodsTypeId(queryParams.get('goodsTypeId')?queryParams.get('goodsTypeId'):'');
+    setCountryId(queryParams.get('countryId')?queryParams.get('countryId'):'');
+    setCityId(queryParams.get('cityId')?queryParams.get('cityId'):'');
+    setCmrNumber(queryParams.get('cmrNumber')?queryParams.get('cmrNumber'):0);
+    setCimNumber(queryParams.get('cimNumber')?queryParams.get('cimNumber'):0);
+    setInvoice(queryParams.get('invoice')?queryParams.get('invoice'):0);
+    
+  },[queryParams])
+  useEffect(()=>{
+    fetchData();
+  },[positionNumber,clientId,declaration,plateNumber,transporterId,serviceTypeId,
+    transportTypeId,goodsTypeId,countryId,cityId,cmrNumber,cimNumber,invoice,pageSize])
+
+  console.log(positionNumber,'positionNumber');
+
   const trigger = useSelector(getTrigger);
 
   const [page, setPage] = useState(0);
@@ -102,19 +143,19 @@ const Dashboard = (props: DashboardProps) => {
   // const [clientNameFilter, setClientNameFilter] = useState("");
   // const [positionNumberFilter, setPositionNumberFilter] = useState("");
   // const [dashboardWithoutFilter, setDashboardWithoutFilter] = useState<any>([]);
-  const PositionNumberFilter = useRef('');
-  const ClientId = useRef('');
-  const TransporterId = useRef('');
-  const ServiceTypeId = useRef('');
-  const TransportTypeId = useRef('');
-  const GoodsTypeId = useRef('');
-  const CountryId = useRef('');
-  const CityId = useRef('');
-  const Declaration = useRef('');
-  const PlateNumber = useRef('');
-  const CMRNumber = useRef(0);
-  const CIMNumber = useRef(0);
-  const Invoice = useRef(0);
+  // const PositionNumberFilter = useRef('');
+  // const ClientId = useRef('');
+  // const TransporterId = useRef('');
+  // const ServiceTypeId = useRef('');
+  // const TransportTypeId = useRef('');
+  // const GoodsTypeId = useRef('');
+  // const CountryId = useRef('');
+  // const CityId = useRef('');
+  // const Declaration = useRef('');
+  // const PlateNumber = useRef('');
+  // const CMRNumber = useRef(0);
+  // const CIMNumber = useRef(0);
+  // const Invoice = useRef(0);
 
 
   const fetchData = async () => {
@@ -122,13 +163,13 @@ const Dashboard = (props: DashboardProps) => {
       // const PerPage = useSelector(getRowPerPage);
       // Make a request to your API
       const response = await fetch(variables.API_URL + 'Subject?page=' + countPage.current + '&pageSize=' + countRowsPerPage.current
-      + '&clientId=' + ClientId.current + '&positionNumber=' + PositionNumberFilter.current
-      + '&declaration=' + Declaration.current + '&plateNumber=' + PlateNumber.current
-      + '&transporterId=' + TransporterId.current + '&serviceTypeId=' + ServiceTypeId.current
-      + '&transportTypeId=' + TransportTypeId.current + '&goodsTypeId=' + GoodsTypeId.current
-      + '&countryId=' + CountryId.current + '&cityId=' + CityId.current
-      + '&cmrNumber=' + CMRNumber.current + '&cimNumber=' + CIMNumber.current
-      + '&invoice=' + Invoice.current);
+      + '&clientId=' + clientId + '&positionNumber=' + positionNumber
+      + '&declaration=' + declaration + '&plateNumber=' + plateNumber
+      + '&transporterId=' + transporterId + '&serviceTypeId=' + serviceTypeId
+      + '&transportTypeId=' + transportTypeId + '&goodsTypeId=' + goodsTypeId
+      + '&countryId=' + countryId + '&cityId=' + cityId
+      + '&cmrNumber=' + cmrNumber + '&cimNumber=' + cimNumber
+      + '&invoice=' + invoice);
       // Parse the JSON response
       const result: any = await response.json();
       const responseClient = await fetch(variables.API_URL + 'Autocomplete/client');
@@ -211,33 +252,33 @@ const Dashboard = (props: DashboardProps) => {
   //   setPositionNumberFilter(e.target.value);
   //   previousInputValue.current = e.target.value
   // }
-  const FilterFn =async (clientIdFilter:any,pageNumberFilter: any, positionNumberFilter: any, declarationFilter: any,
-    CMRFilter: any, CIMFilter: any, invoiceFilter: any, plateNumberFilter: any, transporterIdFilter:any, 
-    serviceTypeIdFilter:any,transportTypeIdFilter:any,goodsTypeIdFilter:any,countryFilter:any,cityFilter:any) => {
+  const FilterFn =async (pageNumberFilter: any) => {
+    console.log(pageNumberFilter,'pageNumberFilter');
     countRowsPerPage.current = pageNumberFilter;
     setRowsPerPage(pageNumberFilter);
     if(page != 0){
       setPage(0);
       countPage.current = 0;
     }
-    ClientId.current = clientIdFilter;
-    PositionNumberFilter.current = positionNumberFilter;
-    Declaration.current = declarationFilter;
-    PlateNumber.current = plateNumberFilter;
-    TransporterId.current = transporterIdFilter;
-    ServiceTypeId.current = serviceTypeIdFilter;
-    TransportTypeId.current = transportTypeIdFilter;
-    GoodsTypeId.current = goodsTypeIdFilter;
-    CountryId.current = countryFilter;
-    CityId.current = cityFilter;
-    var CMRNumberFilter = parseInt(CMRFilter, 10);
-    CMRNumber.current = isNaN(CMRNumberFilter)? 0 : CMRNumberFilter ;
-    var CIMNumberFilter = parseInt(CIMFilter, 10);
-    CIMNumber.current = isNaN(CIMNumberFilter)? 0 : CIMNumberFilter ;
-    var InvoiceFilter = parseInt(invoiceFilter, 10);
-    Invoice.current = isNaN(InvoiceFilter)? 0 : InvoiceFilter ;
-    
+
     await fetchData();
+    // ClientId.current = clientIdFilter;
+    // PositionNumberFilter.current = positionNumberFilter;
+    // Declaration.current = declarationFilter;
+    // PlateNumber.current = plateNumberFilter;
+    // TransporterId.current = transporterIdFilter;
+    // ServiceTypeId.current = serviceTypeIdFilter;
+    // TransportTypeId.current = transportTypeIdFilter;
+    // GoodsTypeId.current = goodsTypeIdFilter;
+    // CountryId.current = countryFilter;
+    // CityId.current = cityFilter;
+    // var CMRNumberFilter = parseInt(CMRFilter, 10);
+    // CMRNumber.current = isNaN(CMRNumberFilter)? 0 : CMRNumberFilter ;
+    // var CIMNumberFilter = parseInt(CIMFilter, 10);
+    // CIMNumber.current = isNaN(CIMNumberFilter)? 0 : CIMNumberFilter ;
+    // var InvoiceFilter = parseInt(invoiceFilter, 10);
+    // Invoice.current = isNaN(InvoiceFilter)? 0 : InvoiceFilter ;
+    
     // var CIMNumberFilter = parseInt(CIMFilter, 10);
     // const isCIMNumberFilterNaN = isNaN(CIMNumberFilter);
     // var InvoiceFilter = parseInt(invoiceFilter, 10);
@@ -261,6 +302,8 @@ const Dashboard = (props: DashboardProps) => {
     // setRows(filterData);
     // dispatch(setTrigger({ trigger: !trigger }))
   };
+
+  console.log(location, 'kkkk');
 
   return (
     <DashboardLayout FilterFn={FilterFn} >
