@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MS.Gana.Domain.Model;
+using System.Runtime.ConstrainedExecution;
+using System.Xml.Linq;
 
 namespace MS.GanaWebAPI.Controllers
 {
@@ -17,15 +20,104 @@ namespace MS.GanaWebAPI.Controllers
             _configuration = configuration;
             _env = env;
         }
-        [HttpGet]
-        public JsonResult Get()
+        public class PaginatedData
         {
-            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("ProjectMsAppCon"));
-            var dbList = dbClient.GetDatabase("ProjectMS").GetCollection<Subject>("Subject").AsQueryable();
-
-            return new JsonResult(dbList);
+            public List<Subject>? Data { get; set; }
+            public long TotalCount { get; set; }
         }
-        
+        [HttpGet]
+        public async Task<JsonResult> Get(int page, int pageSize, string? clientId, string? positionNumber,
+            string? declaration, string? plateNumber, string? transporterId, string? serviceTypeId, string? transportTypeId,
+            string? goodsTypeId, string? countryId, string? cityId, int? cmrNumber, int? cimNumber, int? invoice)
+        {
+            
+
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("ProjectMsAppCon"));
+            var db = dbClient.GetDatabase("ProjectMS");
+            var collection = db.GetCollection<Subject>("Subject");
+
+            // Calculate the number of documents to skip based on the page and page size
+            int skip = page * pageSize;
+
+
+            var filterBuilder = Builders<Subject>.Filter;
+            FilterDefinition<Subject> filter = filterBuilder.Empty; // Initialize an empty filter
+
+            // Handle null values for query parameters
+            
+            if (!string.IsNullOrEmpty(clientId))
+            {
+                filter &= filterBuilder.Regex(s => s.ClientId, new BsonRegularExpression(clientId, "i"));
+            }
+
+            if (!string.IsNullOrEmpty(positionNumber))
+            {
+                filter &= filterBuilder.Regex(s => s.PositionNumber, new BsonRegularExpression(positionNumber, "i"));
+            }
+            if (!string.IsNullOrEmpty(declaration))
+            {
+                filter &= filterBuilder.Regex(s => s.Declaration, new BsonRegularExpression(declaration, "i"));
+            }
+            if (!string.IsNullOrEmpty(plateNumber))
+            {
+                filter &= filterBuilder.Regex(s => s.PlateNumber, new BsonRegularExpression(plateNumber, "i"));
+            }
+            if (!string.IsNullOrEmpty(transporterId))
+            {
+                filter &= filterBuilder.Regex(s => s.TransporterId, new BsonRegularExpression(transporterId, "i"));
+            }
+            if (!string.IsNullOrEmpty(serviceTypeId))
+            {
+                filter &= filterBuilder.Regex(s => s.ServiceTypeId, new BsonRegularExpression(serviceTypeId, "i"));
+            }
+            if (!string.IsNullOrEmpty(transportTypeId))
+            {
+                filter &= filterBuilder.Regex(s => s.TransportTypeId, new BsonRegularExpression(transportTypeId, "i"));
+            }
+            if (!string.IsNullOrEmpty(goodsTypeId))
+            {
+                filter &= filterBuilder.Regex(s => s.GoodsTypeId, new BsonRegularExpression(goodsTypeId, "i"));
+            }
+            if (!string.IsNullOrEmpty(countryId))
+            {
+                filter &= filterBuilder.Regex(s => s.Country, new BsonRegularExpression(countryId, "i"));
+            }
+            if (!string.IsNullOrEmpty(cityId))
+            {
+                filter &= filterBuilder.Regex(s => s.City, new BsonRegularExpression(cityId, "i"));
+            }
+             
+            if (cmrNumber.HasValue && cmrNumber.Value != 0)
+            {
+                filter &= filterBuilder.Eq(s => s.CMRNumber, cmrNumber.Value);
+            }
+            if (cimNumber.HasValue && cimNumber.Value != 0)
+            {
+                filter &= filterBuilder.Eq(s => s.CIMNumber, cimNumber.Value);
+            }
+            if (invoice.HasValue && invoice.Value != 0)
+            {
+                filter &= filterBuilder.Eq(s => s.InvoiceNumber, invoice.Value);
+            }
+
+
+            long dbListLength = await collection.CountDocumentsAsync(filter);
+
+            // Fetch the paginated data from the MongoDB collection with the specified filter
+            var dbList = await collection.Find(filter)
+                                          .Skip(skip)
+                                          .Limit(pageSize)
+                                          .ToListAsync();
+
+            var paginatedData = new PaginatedData
+            {
+                Data = dbList,
+                TotalCount = dbListLength
+            };
+            return new JsonResult(paginatedData);
+
+        }
+
         [HttpGet("{id}")]
         public JsonResult OneGet(string id)
         {

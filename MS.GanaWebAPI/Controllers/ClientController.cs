@@ -23,6 +23,31 @@ namespace MS.GanaWebAPI.Controllers
 
             return new JsonResult(dbList);
         }
+        
+        [Route("RelationTable")]
+        [HttpGet]
+        public JsonResult RelationTable()
+        {
+            try
+            {
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("ProjectMsAppCon"));
+                var subjectCollection = dbClient.GetDatabase("ProjectMS").GetCollection<Subject>("Subject");
+
+                var subjects = subjectCollection.Aggregate()
+                    .Lookup("Client", "ClientId", "_id", "ClientName")
+                    .Lookup("GoodsType", "GoodsTypeId", "_id", "GoodsTypeName")                   
+                    .ToList();
+
+                return new JsonResult(subjects);
+            }
+            catch
+            {
+                // Log the exception or handle it as needed
+                return new JsonResult("Internal Server Error");
+            }
+        }
+
+
         [HttpPost]
         public JsonResult Post(Client cli)
         {

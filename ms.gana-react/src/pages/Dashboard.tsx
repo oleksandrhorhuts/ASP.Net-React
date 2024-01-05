@@ -23,13 +23,16 @@ import IconButton from '@mui/material/IconButton';
 import Collapse from '@mui/material/Collapse';
 import CloseIcon from '@mui/icons-material/Close';
 import Fab from '@mui/material/Fab';
+import { useSelector } from 'react-redux'
 import { variables } from "../Variable";
 import { DetailItem, EditItem } from "../molecules";
+import { getTrigger } from "../app/TriggerSlice";
+import { getRowPerPage } from "../app/RowPerPageSlice";
 
 
 const StyledTableHead = styled(TableHead)({
   backgroundColor: "#808692",
-  textAlign:'center',
+  textAlign: 'center',
   "& th": {
     color: "#fff"
   }
@@ -52,16 +55,22 @@ function createData(
   return { count, name, address, email, phone, amount };
 }
 
- 
+
 interface DashboardProps {
   trigger: boolean;
 }
 
 const Dashboard = (props: DashboardProps) => {
+  const trigger = useSelector(getTrigger);
 
   const [page, setPage] = useState(0);
+  const countPage = useRef(0);
+
+  const [rows, setRows] = useState([]);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [rows, setrows] = useState<any>([]);
+  const countRowsPerPage = useRef(10);
+  const TotalCount = useRef(10);
+
   const [AlertMessage, setAlert] = useState(false);
   const [AlarmMessage, setAlarmMessage] = useState('');
   const [ClientIdList, setClientIdList] = useState<any>([]);
@@ -76,8 +85,8 @@ const Dashboard = (props: DashboardProps) => {
   const detailModalClose = () => {
     handleDetailModal(false);
     setSelectedItemId("");
-  }
-  const detailModalOpen = ( Id: string ) => {
+  } 
+  const detailModalOpen = (Id: string) => {
     handleDetailModal(true);
     setSelectedItemId(Id);
   }
@@ -85,19 +94,41 @@ const Dashboard = (props: DashboardProps) => {
     handleEditModal(false);
     setSelectedItemId("");
   }
-  const editModalOpen = ( Id: string ) => {
+  const editModalOpen = (Id: string) => {
     handleEditModal(true);
     setSelectedItemId(Id);
   }
 
-  const [clientNameFilter, setClientNameFilter] = useState("");
-  const [positionNumberFilter, setPositionNumberFilter] = useState("");
-  const [dashboardWithoutFilter, setDashboardWithoutFilter] = useState<any>([]);
+  // const [clientNameFilter, setClientNameFilter] = useState("");
+  // const [positionNumberFilter, setPositionNumberFilter] = useState("");
+  // const [dashboardWithoutFilter, setDashboardWithoutFilter] = useState<any>([]);
+  const PositionNumberFilter = useRef('');
+  const ClientId = useRef('');
+  const TransporterId = useRef('');
+  const ServiceTypeId = useRef('');
+  const TransportTypeId = useRef('');
+  const GoodsTypeId = useRef('');
+  const CountryId = useRef('');
+  const CityId = useRef('');
+  const Declaration = useRef('');
+  const PlateNumber = useRef('');
+  const CMRNumber = useRef(0);
+  const CIMNumber = useRef(0);
+  const Invoice = useRef(0);
+
 
   const fetchData = async () => {
     try {
+      // const PerPage = useSelector(getRowPerPage);
       // Make a request to your API
-      const response = await fetch(variables.API_URL + 'Subject');
+      const response = await fetch(variables.API_URL + 'Subject?page=' + countPage.current + '&pageSize=' + countRowsPerPage.current
+      + '&clientId=' + ClientId.current + '&positionNumber=' + PositionNumberFilter.current
+      + '&declaration=' + Declaration.current + '&plateNumber=' + PlateNumber.current
+      + '&transporterId=' + TransporterId.current + '&serviceTypeId=' + ServiceTypeId.current
+      + '&transportTypeId=' + TransportTypeId.current + '&goodsTypeId=' + GoodsTypeId.current
+      + '&countryId=' + CountryId.current + '&cityId=' + CityId.current
+      + '&cmrNumber=' + CMRNumber.current + '&cimNumber=' + CIMNumber.current
+      + '&invoice=' + Invoice.current);
       // Parse the JSON response
       const result: any = await response.json();
       const responseClient = await fetch(variables.API_URL + 'Autocomplete/client');
@@ -118,41 +149,49 @@ const Dashboard = (props: DashboardProps) => {
       setServiceTypeIdList(resultServiceType);
       setTransportTypeIdList(resultTransportType);
       setGoodsTypeIdList(resultGoodsType);
-      // console.log(result,'result-data');
+      // console.log(result,'result-data'); 
       // // Update the state with the fetched data
-      setrows(result);
-      setDashboardWithoutFilter(result);
+      setRows(result.Data);    
+      TotalCount.current = result.TotalCount;
+      // dispatch(setTableData({ tableData: result }))
+      // setDashboardWithoutFilter(result.Data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
-  useEffect(()=>{
+ 
+  useEffect(() => {
     // Call the fetchData function when the component mounts
     fetchData();
-  },[])
+  }, [trigger])
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
+    countPage.current = newPage ;
+    fetchData();
   };
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
+    countPage.current = 0;
+    countRowsPerPage.current = +event.target.value;
+    fetchData();
   };
   const DeleteRow = async (Id: any) => {
-    console.log(Id,'Id')
-    if(window.confirm('Are you sure?')){
+    console.log(Id, 'Id')
+    if (window.confirm('Are you sure?')) {
       const response = await fetch(variables.API_URL + 'Subject/' + Id, {
-       method: 'DELETE',
-       headers: {
-         'Content-Type': 'application/json',
-       }
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
       const result = await response.json();
       setAlarmMessage(result);
       setAlert(true);
-    // Call the fetchData function when the component mounts
-      fetchData(); 
+      // Call the fetchData function when the component mounts
+      fetchData();
       await setTimeout(() => {
         setAlert(false);
       }, 5000);
@@ -164,68 +203,92 @@ const Dashboard = (props: DashboardProps) => {
   }
   const previous1 = useRef("");
   const previousInputValue = useRef("");
-  const handleClientName = (e:any) => {
-    setClientNameFilter(e.target.value);
-    previous1.current = e.target.value;
-  }
-  const handlePositionNumber = (e:any) => {
-    setPositionNumberFilter(e.target.value);
-    previousInputValue.current = e.target.value
-  }
-  const FilterFn = (pageNumberFilter:any, positionNumberFilter:any,declarationFilter:any,
-    CMRFilter:any,CIMFilter:any,invoiceFilter:any,plateNumberFilter:any) =>{
+  // const handleClientName = (e: any) => {
+  //   setClientNameFilter(e.target.value);
+  //   previous1.current = e.target.value;
+  // }
+  // const handlePositionNumber = (e: any) => {
+  //   setPositionNumberFilter(e.target.value);
+  //   previousInputValue.current = e.target.value
+  // }
+  const FilterFn =async (clientIdFilter:any,pageNumberFilter: any, positionNumberFilter: any, declarationFilter: any,
+    CMRFilter: any, CIMFilter: any, invoiceFilter: any, plateNumberFilter: any, transporterIdFilter:any, 
+    serviceTypeIdFilter:any,transportTypeIdFilter:any,goodsTypeIdFilter:any,countryFilter:any,cityFilter:any) => {
+    countRowsPerPage.current = pageNumberFilter;
     setRowsPerPage(pageNumberFilter);
+    if(page != 0){
+      setPage(0);
+      countPage.current = 0;
+    }
+    ClientId.current = clientIdFilter;
+    PositionNumberFilter.current = positionNumberFilter;
+    Declaration.current = declarationFilter;
+    PlateNumber.current = plateNumberFilter;
+    TransporterId.current = transporterIdFilter;
+    ServiceTypeId.current = serviceTypeIdFilter;
+    TransportTypeId.current = transportTypeIdFilter;
+    GoodsTypeId.current = goodsTypeIdFilter;
+    CountryId.current = countryFilter;
+    CityId.current = cityFilter;
     var CMRNumberFilter = parseInt(CMRFilter, 10);
-    const isCMRNumberFilterNaN = isNaN(CMRNumberFilter);
+    CMRNumber.current = isNaN(CMRNumberFilter)? 0 : CMRNumberFilter ;
     var CIMNumberFilter = parseInt(CIMFilter, 10);
-    const isCIMNumberFilterNaN = isNaN(CIMNumberFilter);
+    CIMNumber.current = isNaN(CIMNumberFilter)? 0 : CIMNumberFilter ;
     var InvoiceFilter = parseInt(invoiceFilter, 10);
-    const isInvoiceFilterNaN = isNaN(InvoiceFilter);
+    Invoice.current = isNaN(InvoiceFilter)? 0 : InvoiceFilter ;
+    
+    await fetchData();
+    // var CIMNumberFilter = parseInt(CIMFilter, 10);
+    // const isCIMNumberFilterNaN = isNaN(CIMNumberFilter);
+    // var InvoiceFilter = parseInt(invoiceFilter, 10);
+    // const isInvoiceFilterNaN = isNaN(InvoiceFilter);
 
-    console.log(positionNumberFilter,'positionNumberFilter');
-    let filterData = dashboardWithoutFilter.filter(
-      function(el:any){ console.log(el.CMRNumber,"dddddd");
-        return el.PositionNumber.toString().toLowerCase().includes(
-          positionNumberFilter.toString().trim().toLowerCase()
-        ) && el.Declaration.toString().toLowerCase().includes(
-          declarationFilter.toString().trim().toLowerCase()
-        )  && el.PlateNumber.toString().toLowerCase().includes(
-          plateNumberFilter.toString().trim().toLowerCase()
-        ) && (isCMRNumberFilterNaN || el.CMRNumber === CMRNumberFilter)
-        && (isCIMNumberFilterNaN || el.CIMNumber === CIMNumberFilter)
-        && (isInvoiceFilterNaN || el.InvoiceNumber === InvoiceFilter)
-      }
-    );
-    setrows(filterData);
-  }
+    // console.log(positionNumberFilter, 'positionNumberFilter');
+    // let filterData = dashboardWithoutFilter.filter(
+    //   function (el: any) {
+    //     console.log(el.CMRNumber, "dddddd");
+    //     return el.PositionNumber.toString().toLowerCase().includes(
+    //       positionNumberFilter.toString().trim().toLowerCase()
+    //     ) && el.Declaration.toString().toLowerCase().includes(
+    //       declarationFilter.toString().trim().toLowerCase()
+    //     ) && el.PlateNumber.toString().toLowerCase().includes(
+    //       plateNumberFilter.toString().trim().toLowerCase()
+    //     ) && (isCMRNumberFilterNaN || el.CMRNumber === CMRNumberFilter)
+    //       && (isCIMNumberFilterNaN || el.CIMNumber === CIMNumberFilter)
+    //       && (isInvoiceFilterNaN || el.InvoiceNumber === InvoiceFilter)
+    //   }
+    // );
+    // setRows(filterData);
+    // dispatch(setTrigger({ trigger: !trigger }))
+  };
 
   return (
-    <DashboardLayout onSave={handleOnSave} FilterFn={FilterFn}>
-      <Typography variant="h4" component="h5" mb={3}>Предмети</Typography>
+    <DashboardLayout FilterFn={FilterFn} >
+      <Typography variant="h4" component="h5" mb={3}>Предмети </Typography>
       {
         AlertMessage && (
           <AlarmPosition>
-            
+
             <Collapse in={AlertMessage}>
-            <Alert
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    setAlert(false);
-                  }}
-                >
-                  <CloseIcon fontSize="inherit" />
-                </IconButton>
-              }
-              sx={{ mb: 2 }}
-            >
-              {AlarmMessage}
-            </Alert>
-          </Collapse>
-             
+              <Alert
+                action={
+                  <IconButton
+                    aria-label="close"
+                    color="inherit"
+                    size="small"
+                    onClick={() => {
+                      setAlert(false);
+                    }}
+                  >
+                    <CloseIcon fontSize="inherit" />
+                  </IconButton>
+                }
+                sx={{ mb: 2 }}
+              >
+                {AlarmMessage}
+              </Alert>
+            </Collapse>
+
           </AlarmPosition>
         )
       }
@@ -254,79 +317,39 @@ const Dashboard = (props: DashboardProps) => {
             </TableRow>
           </StyledTableHead>
           <TableBody>
-            {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row:any, index:any) => (
+            {rows && rows.map((row: any, index: any) => (
               <TableRow
                 key={index}
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
               >
                 <TableCell  >
-                  { index + 1 }
+                  {index + 1 + page*rowsPerPage}
                 </TableCell>
-                <TableCell>
-                  { 
-                    ClientIdList.map((option:any) =>{
-                      if(option.Id == row.ClientId){
-                        return option.ClientName
-                      }
-                    })
-                  }
-                </TableCell>
+                <TableCell> { row.ClientId } </TableCell>
                 <TableCell>{row.PositionNumber}</TableCell>
                 <TableCell>{row.Declaration}</TableCell>
                 <TableCell>{row.CMRNumber}</TableCell>
                 <TableCell>{row.CIMNumber}</TableCell>
-                <TableCell>{row.Record.slice(0,10)}</TableCell>
-                <TableCell>
-                  { 
-                    TransporterIdList.map((option:any) =>{
-                      if(option.Id == row.TransporterId){
-                        return option.TransporterName
-                      }
-                    })
-                  }
-                </TableCell>
+                <TableCell>{row.Record.slice(0, 10)}</TableCell>
+                <TableCell> { row.TransporterId }</TableCell>
                 <TableCell>{row.PlateNumber}</TableCell>
-                <TableCell>
-                  { 
-                    ServiceTypeIdList.map((option:any) =>{
-                      if(option.Id == row.ServiceTypeId){
-                        return option.ServiceTypeName
-                      }
-                    })
-                  }
-                </TableCell>
-                <TableCell>
-                  { 
-                    TransportTypeIdList.map((option:any) =>{
-                      if(option.Id == row.TransportTypeId){
-                        return option.TransportTypeName
-                      }
-                    })
-                  }
-                </TableCell>
-                <TableCell>
-                  { 
-                    GoodsTypeIdList.map((option:any) =>{
-                      if(option.Id == row.GoodsTypeId){
-                        return option.GoodsTypeName
-                      }
-                    })
-                  }
-                </TableCell>
+                <TableCell> { row.ServiceTypeId }</TableCell>
+                <TableCell> { row.TransportTypeId }</TableCell>
+                <TableCell> { row.GoodsTypeId }</TableCell>
                 <TableCell>{row.InvoiceNumber}</TableCell>
                 <TableCell>{row.Country}</TableCell>
                 <TableCell>{row.City}</TableCell>
-                <TableCell>{row.DepartureDate.slice(0,10)}</TableCell>
-                <TableCell>{row.ArrivalDate.slice(0,10)}</TableCell>
+                <TableCell>{row.DepartureDate.slice(0, 10)}</TableCell>
+                <TableCell>{row.ArrivalDate.slice(0, 10)}</TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={2}>
-                    <Fab color="primary"  size="small" aria-label="edit" onClick={()=>detailModalOpen(row.Id)}>
+                    <Fab color="primary" size="small" aria-label="edit" onClick={() => detailModalOpen(row.Id)}>
                       <VisibilityIcon />
                     </Fab>
-                    <Fab color="primary"  size="small" aria-label="edit" onClick={()=>editModalOpen(row.Id)}>
+                    <Fab color="primary" size="small" aria-label="edit" onClick={() => editModalOpen(row.Id)}>
                       <EditIcon />
                     </Fab>
-                    <Fab color="primary"  size="small" aria-label="edit" onClick={()=>DeleteRow(row.Id)}>
+                    <Fab color="primary" size="small" aria-label="edit" onClick={() => DeleteRow(row.Id)}>
                       <DeleteIcon />
                     </Fab>
                   </Stack>
@@ -339,7 +362,7 @@ const Dashboard = (props: DashboardProps) => {
       <TablePagination
         rowsPerPageOptions={[10, 20, 30]}
         component="div"
-        count={rows.length}
+        count={TotalCount.current}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

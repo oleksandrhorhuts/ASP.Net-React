@@ -22,7 +22,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 import { CountryDropdown, RegionDropdown  } from 'react-country-region-selector';
 import dayjs, { Dayjs } from 'dayjs';
 import { variables } from '../../Variable'; 
-
+const citiesJSON = 'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/cities.json';
 
 const ModalWrap = styled(Box)({
   position: 'absolute',
@@ -153,6 +153,7 @@ const DetailItem = ({
   }
   //Destination
   const [country, setcountry] = useState<string>("");
+  const [cityList, setCityList] = useState<string[]>([]);
   const [state_region, setstate_region] = useState<string>("");
   const [DepartureDate, setDepartureDate] = useState<Dayjs | any>(dayjs(new Date()));
   const [ArrivalDate, setArrivalDate] = useState<Dayjs | any>(dayjs(new Date()));
@@ -177,15 +178,17 @@ const DetailItem = ({
   const [toggleDoc, setToggleDoc] = useState(false);
   const [detailInfo, setDetailInfo] = useState<any>([]);
 
-  const selectcountry = (option: any) => {
+  const selectcountry =async (option: any) => {
       setcountry(option);
+      var cities:any[] = [];
+      const getCities = await (await fetch(citiesJSON)).json()
+      getCities.map((city:any) => {
+        if(city.country_name == option){
+          cities.push(city.name);
+        }
+      })
+      setCityList(cities);
   }
-  const [selectClientName, setSelectClientName] = useState("");
-  const [selectTransporterName, setSelectTransporterName] = useState("");
-  const [selectSerivceTypeName, setSelectServiceTypeName] = useState("");
-  const [selectTransportTypeName, setSelectTransportTypeName] = useState("");
-  const [selectGoodsTypeName, setSelectGoodsTypeName] = useState("");
-
   useEffect(() => {
     // Call the fetchData function when the component mounts
     fetchData();
@@ -219,35 +222,10 @@ const DetailItem = ({
       const result: any = await response.json();
       setDetailInfo(result);
       setClientId(result.ClientId);
-      resultClient.map((option:any) => {
-        if(option.Id == result.ClientId){
-          setSelectClientName(option.ClientName);
-        } 
-      })
       setTransporterId(result.TransporterId);
-      resultTransporter.map((option:any) => {
-        if(option.Id == result.TransporterId){
-          setSelectTransporterName(option.TransporterName);
-        } 
-      })
       setServiceTypeId(result.ServiceTypeId);
-      resultServiceType.map((option:any) => {
-        if(option.Id == result.ServiceTypeId){
-          setSelectServiceTypeName(option.ServiceTypeName);
-        } 
-      })
-      setSelectTransportTypeName(result.TransportTypeId);
-      resultTransportType.map((option:any) => {
-        if(option.Id == result.TransportTypeId){
-          setSelectTransportTypeName(option.TransportTypeName);
-        } 
-      })
-      setSelectGoodsTypeName(result.GoodsTypeId);
-      resultGoodsType.map((option:any) => {
-        if(option.Id == result.GoodsTypeId){
-          setSelectGoodsTypeName(option.GoodsTypeName);
-        } 
-      })
+      setTransportTypeId(result.TransportTypeId);
+      setGoodsTypeId(result.GoodsTypeId);
       setPositionNumber(result.PositionNumber);
       setDeclaration(result.Declaration);
       setCMRNumber(result.CMRNumber);
@@ -260,6 +238,14 @@ const DetailItem = ({
       setNote(result.Notes);
       setcountry(result.Country);
       setstate_region(result.City);
+      var cities:any[] = [];
+      const getCities = await (await fetch(citiesJSON)).json()
+      getCities.map((city:any) => {
+        if(city.country_name == result.Country){
+          cities.push(city.name);
+        }
+      })
+      setCityList(cities);
       if(result.InvoiceFilePath){
         let invoiceFilePath:any = [{ name: result.InvoiceFilePath}]
         setInvoice(invoiceFilePath);
@@ -323,6 +309,9 @@ const DetailItem = ({
 
   const changeDocumentToAdd = (event: SelectChangeEvent) => {
     setDocToAdd(event.target.value);
+  }
+  const changeState = (event: any) => {
+    setstate_region(event.target.value);
   }
   
   return (
@@ -418,7 +407,7 @@ const DetailItem = ({
               
               <Autocomplete
                 freeSolo
-                value={selectClientName}
+                value={ClientId}
                 id="free-ClientId"
                 size='small'
                 disabled
@@ -434,13 +423,7 @@ const DetailItem = ({
                   />
                 )}
                 onChange={(event: any, newValue:any)=>{
-                  ClientIdList.map((option: any) =>{
-                    if(option.ClientName == newValue)
-                    {
-                      setClientId(option.Id);
-                      // setSelectClientName(option.ClientName);
-                    }
-                  })
+                      setClientId(newValue);
                 }}
               />
               <InputField
@@ -509,7 +492,7 @@ const DetailItem = ({
               <SubTitle>Транспорт</SubTitle>
               <Autocomplete
                 freeSolo
-                value={selectTransporterName}
+                value={TransporterId}
                 id="free-TransporterId"
                 size='small'
                 disabled
@@ -525,12 +508,7 @@ const DetailItem = ({
                   />
                 )}
                 onChange={(event: any, newValue:any)=>{
-                  TransporterIdList.map((option: any) =>{
-                    if(option.TransporterName == newValue)
-                    {
-                      setTransporterId(option.Id);
-                    }
-                  })
+                      setTransporterId(newValue);
                 }}
               />
               <InputField
@@ -543,7 +521,7 @@ const DetailItem = ({
               />
               <Autocomplete
                 freeSolo
-                value={selectSerivceTypeName}
+                value={ServiceTypeId}
                 id="free-ServiceTypeId"
                 size='small'
                 sx={{marginTop:'10px'}}
@@ -560,17 +538,12 @@ const DetailItem = ({
                   />
                 )}
                 onChange={(event: any, newValue:any)=>{
-                  ServiceTypeIdList.map((option: any) =>{
-                    if(option.ServiceTypeName == newValue)
-                    {
-                      setServiceTypeId(option.Id);
-                    }
-                  })
+                      setServiceTypeId(newValue);
                 }}
               />
                <Autocomplete
                 freeSolo
-                value={selectTransportTypeName}
+                value={TransportTypeId}
                 id="free-TransportTypeId"
                 size='small'
                 sx={{marginTop:'10px'}}
@@ -587,17 +560,12 @@ const DetailItem = ({
                   />
                 )}
                 onChange={(event: any, newValue:any)=>{
-                  TransportTypeIdList.map((option: any) =>{
-                    if(option.TransportTypeName == newValue)
-                    {
-                      setTransportTypeId(option.Id);
-                    }
-                  })
+                      setTransportTypeId(newValue);
                 }}
               />
                <Autocomplete
                 freeSolo
-                value={selectGoodsTypeName}
+                value={GoodsTypeId}
                 id="free-GoodsTypeId"
                 size='small'
                 sx={{marginTop:'10px'}}
@@ -614,12 +582,7 @@ const DetailItem = ({
                   />
                 )}
                 onChange={(event: any, newValue:any)=>{
-                  GoodsTypeIdList.map((option: any) =>{
-                    if(option.GoodsTypeName == newValue)
-                    {
-                      setGoodsTypeId(option.Id);
-                    }
-                  })
+                      setGoodsTypeId(newValue);
                 }}
               />
               
@@ -662,12 +625,18 @@ const DetailItem = ({
                   onChange={selectcountry}
                   disabled
               />
-              <StyledRegionDropdown
+              {/* <StyledRegionDropdown
                 country={country}
                 value={state_region}
                 disabled
                 onChange={(val) => setstate_region(val)} 
-              />
+              /> */}
+              <Select value={state_region} disabled onChange={changeState} size="small" sx={{ marginTop:'10px'}}>
+                <MenuItem value="" disabled>Select City</MenuItem>
+                {cityList.map((city:any, index) => (
+                  <MenuItem key={index} value={city}>{city}</MenuItem>
+                ))}
+              </Select>
               
               <StyledDatePicker 
                 label="Поаѓање"

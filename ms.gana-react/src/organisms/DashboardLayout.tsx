@@ -23,13 +23,12 @@ const ContentLayout = styled(Box)(({  }) => ({
 
 const DashboardLayout = ({
   children,
-  onSave,
   FilterFn
 } : {
   children: React.ReactNode,
-  onSave?: () => void,
-  FilterFn?:(pageNumberFilter:any, positionNumberFilter:any,declarationFilter:any,
-    CMRFilter:any,CIMFilter:any,invoiceFilter:any,plateNumberFilter:any) => void,
+  FilterFn?:(clientIdFilter:any,pageNumberFilter:any, positionNumberFilter:any,declarationFilter:any,
+    CMRFilter:any,CIMFilter:any,invoiceFilter:any,plateNumberFilter:any,transporterIdFilter:any, serviceTypeIdFilter:any,
+    transportTypeIdFilter:any,goodsTypeIdFilter:any,countryFilter:any,cityFilter:any) => void,
 }) => {
   
   const [show, setShow] = useState(false);
@@ -44,12 +43,12 @@ const DashboardLayout = ({
   const itemModalOpen = () => handleItemModal(true);
   const itemModalClose = () => {
     handleItemModal(false);
-    onSave && onSave();
+    // onSave && onSave();
   }
 
   const connectModalOpen = () => handleConnectModal(true);
   const connectModalClose = () => handleConnectModal(false);
-
+  // const [clientIdFilter, setclientIdFilter]
   const [pageNumberFilter, setpageNumberFilter] = useState(10);
   const [positionNumberFilter, setPositionNumberFilter] = useState("");
   const [declarationFilter, setDeclarationFilter] = useState("");
@@ -57,20 +56,21 @@ const DashboardLayout = ({
   const [CIMFilter, setCIMFilter] = useState<number | ''>('');
   const [invoiceFilter, setInvoiceFilter] = useState<number | ''>('');
   const [plateNumberFilter, setPlateNumberFilter] = useState("");
- 
-  
-  const onFilter = (pageNumberFilter:any, positionNumberFilter:any,declarationFilter:any,
-    CMRFilter:any,CIMFilter:any,invoiceFilter:any,plateNumberFilter:any) => {
-      setpageNumberFilter(pageNumberFilter.current);
-      setPositionNumberFilter(positionNumberFilter.current);
-      setDeclarationFilter(declarationFilter.current);
-      setCMRFilter(CMRFilter.current);
-      setCIMFilter(CIMFilter.current);
-      setInvoiceFilter(invoiceFilter.current);
-      setPlateNumberFilter(plateNumberFilter.current);
-      FilterFn && FilterFn(pageNumberFilter.current, positionNumberFilter.current,declarationFilter.current,
-        CMRFilter.current, CIMFilter.current, invoiceFilter.current, plateNumberFilter.current);
+  const onFilter = (clientIdFilter:any,pageNumberFilter:any, positionNumberFilter:any,declarationFilter:any,
+    CMRFilter:any,CIMFilter:any,invoiceFilter:any,plateNumberFilter:any,transporterIdFilter:any, serviceTypeIdFilter:any,
+    transportTypeIdFilter:any,goodsTypeIdFilter:any,countryFilter:any,cityFilter:any) => {
+      // setpageNumberFilter(pageNumberFilter.current);
+      // setPositionNumberFilter(positionNumberFilter.current);
+      // setDeclarationFilter(declarationFilter.current);
+      // setCMRFilter(CMRFilter.current);
+      // setCIMFilter(CIMFilter.current);
+      // setInvoiceFilter(invoiceFilter.current);
+      // setPlateNumberFilter(plateNumberFilter.current);
+      FilterFn && FilterFn(clientIdFilter.current,pageNumberFilter.current, positionNumberFilter.current,declarationFilter.current,
+        CMRFilter.current, CIMFilter.current, invoiceFilter.current, plateNumberFilter.current, transporterIdFilter.current, 
+        serviceTypeIdFilter.current, transportTypeIdFilter.current, goodsTypeIdFilter.current, countryFilter.current, cityFilter.current);
   }
+   
   return (
     <Stack height={"100vh"}>
       <DashboardHeaderLaptop
@@ -79,7 +79,7 @@ const DashboardLayout = ({
       />
       <BodyLayout>
         <ToggleButton toggle={toggle} />
-        <DashboardSidebar hidden={true} onFilter={onFilter}  />
+        <DashboardSidebar hidden={true}  onFilter={onFilter} />
         <React.Fragment>
           <Drawer
             anchor="left"

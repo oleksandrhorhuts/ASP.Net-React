@@ -14,7 +14,7 @@ namespace MS.Gana.Domain.Model
         //Basic Info
         public string? ClientId { get; set; }
         public string? PositionNumber { get; set;}
-        public string? Declaration { get; set; }
+        public string? Declaration { get; set; } 
         public int? CMRNumber { get; set; }
         public string? CMRFilePath { get; set; }
         public int? CIMNumber { get; set;}

@@ -21,9 +21,11 @@ import { SelectChangeEvent } from '@mui/material/Select';
 import Autocomplete from '@mui/material/Autocomplete';
 import { CountryDropdown, RegionDropdown  } from 'react-country-region-selector';
 import dayjs, { Dayjs } from 'dayjs';
+import { useDispatch, useSelector } from 'react-redux';
 import { variables } from '../../Variable'; 
-
-
+import { getTrigger, setTrigger } from '../../app/TriggerSlice';
+// import { country_cities_list } from '../../country-cities';
+const citiesJSON = 'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/cities.json';
 const ModalWrap = styled(Box)({
   position: 'absolute',
   top: '50%',
@@ -65,8 +67,6 @@ const InputWrap = styled(Stack)({
   width: '100%',
 });
 
- 
-
 const Title = styled(Typography)(({ theme }) => ({
   fontSize: 34,
   fontWeight: 700,
@@ -93,6 +93,7 @@ const StyledCountryDropdown = styled(CountryDropdown)({
   color: 'rgb(102, 102, 102)',
   outline:'none',
 })
+ 
 const StyledRegionDropdown = styled(RegionDropdown)({
   padding: '8.5px 14px',
   width: '100%',
@@ -110,12 +111,13 @@ interface IDocument {
   handleFiles:Dispatch<SetStateAction<never[]>>
 }
 
-
 const NewItem = ({
   onClose
 }: {
   onClose: () => void
 }) => {
+  const dispatch = useDispatch();
+  const trigger = useSelector(getTrigger);
   //Basic info
   const [ClientId, setClientId] = useState('');
   const [ClientIdList, setClientIdList] = useState<any>([]);
@@ -150,6 +152,9 @@ const NewItem = ({
   }
   //Destination
   const [country, setcountry] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+  const [cityList, setCityList] = useState<string[]>([]);
+  
   const [state_region, setstate_region] = useState<string>("");
   const [DepartureDate, setDepartureDate] = useState<Dayjs | any>(dayjs(new Date()));
   const [ArrivalDate, setArrivalDate] = useState<Dayjs | any>(dayjs(new Date()));
@@ -167,10 +172,18 @@ const NewItem = ({
   const [unaddedFiles, setUnaddedFiles] = useState<string[]>([]);
   const [toggleDoc, setToggleDoc] = useState(false);
   
-  console.log(extraDocuments,'extraDocuments');
+  console.log(cityList,'cityList');
 
-  const selectcountry = (option: any) => {
+  const selectcountry =async (option: any) => {
       setcountry(option);
+      var cities:any[] = [];
+      const getCities = await (await fetch(citiesJSON)).json()
+      getCities.map((city:any) => {
+        if(city.country_name == option){
+          cities.push(city.name);
+        }
+      })
+      setCityList(cities);
   }
   //Click Save change button
   const addNew = async () => {
@@ -293,6 +306,7 @@ const NewItem = ({
       "Documents": DocData
     }
     console.log(sendData,'sendData');
+    
     try {
       const response = await fetch(variables.API_URL + 'Subject', {
         method: 'POST',
@@ -313,6 +327,7 @@ const NewItem = ({
     } catch (error) {
       console.error('Error during POST request:');
     }
+    dispatch(setTrigger({ trigger: !trigger}))
     onClose();
   }
 
@@ -361,6 +376,9 @@ const NewItem = ({
 
   const changeDocumentToAdd = (event: SelectChangeEvent) => {
     setDocToAdd(event.target.value);
+  }
+  const changeState = (event: any) => {
+    setstate_region(event.target.value);
   }
   
   const addDocument = () => {
@@ -519,13 +537,8 @@ const NewItem = ({
                   />
                 )}
                 onChange={(event: any, newValue:any)=>{
-                  ClientIdList.map((option: any) =>{
-                    if(option.ClientName == newValue)
-                    {
-                      setClientId(option.Id);
-                    }
-                  })
-                }}
+                      setClientId(newValue);
+                 }}
               />
               <InputField
                 label="Позиција бр."
@@ -602,12 +615,7 @@ const NewItem = ({
                   />
                 )}
                 onChange={(event: any, newValue:any)=>{
-                  TransporterIdList.map((option: any) =>{
-                    if(option.TransporterName == newValue)
-                    {
-                      setTransporterId(option.Id);
-                    }
-                  })
+                    setTransporterId(newValue);
                 }}
               />
               <InputField
@@ -635,12 +643,7 @@ const NewItem = ({
                   />
                 )}
                 onChange={(event: any, newValue:any)=>{
-                  ServiceTypeIdList.map((option: any) =>{
-                    if(option.ServiceTypeName == newValue)
-                    {
-                      setServiceTypeId(option.Id);
-                    }
-                  })
+                    setServiceTypeId(newValue);
                 }}
               />
                <Autocomplete
@@ -661,13 +664,8 @@ const NewItem = ({
                   />
                 )}
                 onChange={(event: any, newValue:any)=>{
-                  TransportTypeIdList.map((option: any) =>{
-                    if(option.TransportTypeName == newValue)
-                    {
-                      setTransportTypeId(option.Id);
-                    }
-                  })
-                }}
+                  setTransportTypeId(newValue);
+                 }}
               />
                <Autocomplete
                 freeSolo
@@ -687,12 +685,7 @@ const NewItem = ({
                   />
                 )}
                 onChange={(event: any, newValue:any)=>{
-                  GoodsTypeIdList.map((option: any) =>{
-                    if(option.GoodsTypeName == newValue)
-                    {
-                      setGoodsTypeId(option.Id);
-                    }
-                  })
+                      setGoodsTypeId(newValue);
                 }}
               />
               
@@ -734,11 +727,12 @@ const NewItem = ({
                   value={country}
                   onChange={selectcountry}
               />
-              <StyledRegionDropdown
-                country={country}
-                value={state_region}
-                onChange={(val) => setstate_region(val)} 
-              />
+              <Select value={state_region} onChange={changeState} size="small" sx={{ marginTop:'10px'}}>
+                <MenuItem value="" disabled>Select City</MenuItem>
+                {cityList.map((city:any, index) => (
+                  <MenuItem key={index} value={city}>{city}</MenuItem>
+                ))}
+              </Select>
               
               <StyledDatePicker 
                 label="Поаѓање"
